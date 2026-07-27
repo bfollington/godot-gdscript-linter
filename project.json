@@ -1,0 +1,19 @@
+{
+  "_comment": "Workbench project manifest. project.json is discovered by workbench/workbench.py's scan of ~/sources/*/project.json.",
+  "name": "godot-gdscript-linter",
+  "type": "godot-addon",
+  "features": [],
+  "launch": {
+    "console_port": 8094
+  },
+  "bin": [
+    "godot"
+  ],
+  "actions": {
+    "scan": "godot --headless --script res://addons/gdscript-linter/analyzer/analyze-cli.gd -- --clickable"
+  },
+  "git": {
+    "remote": "origin",
+    "base_branch": "main"
+  }
+}
