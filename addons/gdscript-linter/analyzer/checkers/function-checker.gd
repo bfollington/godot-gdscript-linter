@@ -23,7 +23,14 @@ func analyze_functions(lines: Array, file_result, add_issue_callback: Callable, 
 		var line: String = lines[i]
 		var trimmed := line.strip_edges()
 
-		if trimmed.begins_with("func "):
+		# `static func` is a function boundary too. Matching only "func " meant static
+		# functions were never analyzed AND were absorbed into the preceding function's
+		# body, so a 3-line `_process` followed by static helpers reported as 236 lines
+		# at complexity 24. Normalize the prefix off before parsing the signature.
+		if trimmed.begins_with("func ") or trimmed.begins_with("static func "):
+			if trimmed.begins_with("static func "):
+				trimmed = trimmed.substr("static ".length())
+
 			# Finalize previous function
 			if in_function and current_func:
 				_finalize_function(current_func, func_body_lines, file_result, add_issue_callback, add_pinned_issue_callback)
