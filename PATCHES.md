@@ -62,13 +62,13 @@ this repo and records the source commit in `addons/gdscript-linter/FORK_VERSION`
 - `~/code/par52` — tuned via `gdlint.json`; see its `AGENTS.md` → "Linting / code quality"
 - `~/code/gizzard`
 
-## Publishing
+## Remotes
 
-This repo has no `origin` yet — only `upstream`. To publish:
+- `origin` — <https://github.com/bfollington/godot-gdscript-linter> (our fork)
+- `upstream` — <https://github.com/graydwarf/godot-gdscript-linter> (Poplava's original)
 
-```bash
-gh repo create godot-gdscript-linter --public --source=. --remote=origin
-git push -u origin main
-```
+It is a real GitHub fork, not an unrelated copy, so opening a PR upstream later is just
+`gh pr create --repo graydwarf/godot-gdscript-linter` from a branch holding one or both fix commits.
+We are not waiting on that: the fork is what our projects consume.
 
 Upstream attribution and the MIT `LICENSE` are unchanged and must stay that way.
