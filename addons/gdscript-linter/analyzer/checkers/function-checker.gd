@@ -41,11 +41,30 @@ func analyze_functions(lines: Array, file_result, add_issue_callback: Callable, 
 			current_func = _parse_function_signature(trimmed, i + 1)
 
 		elif in_function:
-			func_body_lines.append(line)
+			# A function body ends at the first unindented non-empty line, not merely at
+			# the next `func`. Otherwise trailing class-scope code — const blocks, class
+			# vars, comment banners — is counted as body: a 3-line function followed by a
+			# const table reported as 166 lines. GDScript bodies are always indented, and
+			# multi-line signatures are indented too, so this is safe.
+			if _is_top_level_code(line):
+				_finalize_function(current_func, func_body_lines, file_result, add_issue_callback, add_pinned_issue_callback)
+				in_function = false
+				current_func = {}
+				func_body_lines = []
+			else:
+				func_body_lines.append(line)
 
 	# Finalize last function
 	if in_function and current_func:
 		_finalize_function(current_func, func_body_lines, file_result, add_issue_callback, add_pinned_issue_callback)
+
+
+# True for a non-empty line with no leading indentation, i.e. code that lives at
+# class scope rather than inside a function body.
+func _is_top_level_code(line: String) -> bool:
+	if line.strip_edges().is_empty():
+		return false
+	return not (line.begins_with("\t") or line.begins_with(" "))
 
 
 func _parse_function_signature(line: String, line_num: int) -> Dictionary:
@@ -74,6 +93,10 @@ func _parse_function_signature(line: String, line_num: int) -> Dictionary:
 
 
 func _finalize_function(func_data: Dictionary, body_lines: Array, file_result, add_issue_callback: Callable, add_pinned_issue_callback: Callable) -> void:
+	# Blank lines separating this function from the next one are not part of it.
+	while not body_lines.is_empty() and str(body_lines[body_lines.size() - 1]).strip_edges().is_empty():
+		body_lines.remove_at(body_lines.size() - 1)
+
 	var line_count := body_lines.size() + 1  # +1 for signature
 	var max_nesting := _calculate_max_nesting(body_lines)
 	var is_empty := _is_empty_function(body_lines)
