@@ -185,6 +185,25 @@ func check_todo_comments(trimmed: String, line_num: int) -> Variant:
 
 
 # Returns issue dictionary or null
+## True when `pattern` (e.g. "print(") appears in `line` as a CALL rather than as
+## the tail of a longer identifier. A plain substring test reports
+## `func _console_start_sprint():` as a debug print, because "sprint(" ends with
+## "print(" — the same false-positive class as substring-matching TODO markers.
+const _IDENT_CHARS := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+
+
+func _contains_call(line: String, pattern: String) -> bool:
+	var from := 0
+	while from <= line.length():
+		var idx := line.find(pattern, from)
+		if idx < 0:
+			return false
+		if idx == 0 or not _IDENT_CHARS.contains(line[idx - 1]):
+			return true
+		from = idx + 1
+	return false
+
+
 func check_print_statements(trimmed: String, line_num: int) -> Variant:
 	var is_whitelisted := false
 	for whitelist_item in config.print_whitelist:
@@ -194,7 +213,7 @@ func check_print_statements(trimmed: String, line_num: int) -> Variant:
 
 	if not is_whitelisted:
 		for pattern in config.print_patterns:
-			if pattern in trimmed and not trimmed.begins_with("#"):
+			if _contains_call(trimmed, pattern) and not trimmed.begins_with("#"):
 				return {
 					"line": line_num,
 					"severity": "warning",
